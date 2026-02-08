@@ -198,9 +198,11 @@
             box-shadow: 0 3px 0 #455A64;
         }
 
+        /* 読み仮名の表示スタイル */
         .target-char-display {
             font-size: 2rem;
             color: #006064;
+            font-weight: bold;
         }
 
         .canvas-container {
@@ -367,12 +369,12 @@
                 if (isCleared) count++;
 
                 const card = document.createElement('div');
-                // クラス分けで色を変える
                 card.className = `kanji-card`;
                 if (isCleared) {
                     card.classList.add(currentMode === 'practice' ? 'cleared-practice' : 'cleared-test');
                 }
                 
+                // カードの表示は「常に漢字」でOK
                 card.innerHTML = `
                     ${item.char}
                     <div class="mark star-mark">⭐</div>
@@ -394,32 +396,39 @@
             // 背景色とメッセージの切り替え
             const screen = document.getElementById('practice-screen');
             const msgArea = document.getElementById('message-area');
+            const readingDisplay = document.getElementById('current-reading');
             
             if (currentMode === 'test') {
+                // 【ここが変わった】テストモードなら読み仮名だけを大きく表示！
                 screen.classList.add('test-bg');
-                msgArea.innerText = "おもいだして かいてみよう！";
+                msgArea.innerText = "この かんじ を かこう！";
                 msgArea.style.color = "#C62828";
+                
+                readingDisplay.innerText = item.reading; // 読みだけ
+                readingDisplay.style.fontSize = "3rem";  // 大きく
             } else {
+                // 練習モードなら漢字と読みを表示
                 screen.classList.remove('test-bg');
                 msgArea.innerText = "うすいせんを なぞろう！";
                 msgArea.style.color = "#006064";
+                
+                readingDisplay.innerText = `${item.char} (${item.reading})`;
+                readingDisplay.style.fontSize = "2rem"; // 普通
             }
 
             // UIリセット
-            document.getElementById('current-reading').innerText = `${item.char} (${item.reading})`;
             document.getElementById('character-target-div').innerHTML = '';
             document.getElementById('anim-star').style.display = 'none';
             document.getElementById('anim-crown').style.display = 'none';
 
             // HanziWriter 設定
-            // テストモードなら showOutline を false にする
             const isTest = (currentMode === 'test');
 
             writer = HanziWriter.create('character-target-div', item.char, {
                 width: 300,
                 height: 300,
                 padding: 10,
-                showOutline: !isTest, // テストなら下絵なし！
+                showOutline: !isTest, // テストなら下絵なし
                 strokeAnimationSpeed: 1,
                 delayBetweenStrokes: 200,
                 radicalColor: '#168F16',
@@ -427,7 +436,7 @@
                 outlineColor: '#DDD',
                 strokeColor: '#333',
                 highlightColor: '#FF7043',
-                showHintAfterMisses: 1 // 間違えたらヒントを出す（子供への優しさ）
+                showHintAfterMisses: 1 // テストでも間違えたらヒントを出す
             });
 
             startQuiz();
@@ -444,7 +453,6 @@
                         msg.innerText = "ここだよ！";
                     }
                     msg.style.color = "#D32F2F";
-                    // ライブラリが自動でヒントを出してくれます
                 },
                 onCorrectStroke: function(strokeData) {
                     const msg = document.getElementById('message-area');
@@ -461,7 +469,6 @@
         function handleComplete() {
             const msg = document.getElementById('message-area');
             
-            // 演出と保存
             if (currentMode === 'practice') {
                 msg.innerText = "できたー！ ⭐ゲット！";
                 document.getElementById('anim-star').style.display = 'block';
@@ -474,7 +481,6 @@
                 localStorage.setItem('kanjiMasterTest', JSON.stringify(progressTest));
             }
 
-            // 1.5秒後に一覧に戻る
             setTimeout(() => {
                 showScreen('list-screen');
             }, 1500);
