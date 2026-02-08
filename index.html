@@ -86,7 +86,7 @@
 
         .header-info {
             background: white;
-            padding: 10px 20px;
+            padding: 15px 20px;
             border-radius: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             margin-bottom: 20px;
@@ -104,6 +104,23 @@
             color: white;
             margin-bottom: 5px;
             font-weight: bold;
+        }
+
+        /* ★検索ボックスのスタイル★ */
+        #search-box {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: 2px solid #FFCC80;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-family: inherit;
+            text-align: center;
+            background: #FFF8E1;
+        }
+        #search-box::placeholder {
+            color: #CCC;
+            font-size: 1rem;
         }
 
         .kanji-grid {
@@ -284,6 +301,9 @@
             <div style="font-size:1.2rem;">
                 あつめた数： <span id="star-counter" style="font-size:1.5rem; font-weight:bold;">0</span> / 80
             </div>
+            
+            <input type="text" id="search-box" placeholder="けんさく（よみ・かんじ）" oninput="filterList()">
+
             <button class="nav-btn" onclick="showScreen('title-screen')" style="margin-top:10px; font-size:0.8rem;">タイトルへ</button>
         </div>
         
@@ -357,7 +377,9 @@
             document.getElementById(screenId).classList.add('active');
             
             if (screenId === 'list-screen') {
-                renderList();
+                // 画面移動時は検索ボックスをクリアして全表示
+                document.getElementById('search-box').value = '';
+                renderList(kanjiData);
             }
         }
 
@@ -367,15 +389,39 @@
             showScreen('list-screen');
         }
 
+        // --- ★検索機能★ ---
+        function filterList() {
+            const searchText = document.getElementById('search-box').value.trim();
+            
+            if (searchText === '') {
+                renderList(kanjiData); // 空っぽなら全部表示
+                return;
+            }
+
+            // 漢字か、読み仮名に含まれているものを探す
+            const filtered = kanjiData.filter(item => {
+                return item.char.includes(searchText) || item.reading.includes(searchText);
+            });
+            
+            renderList(filtered);
+        }
+
         // --- 一覧画面の描画 ---
-        function renderList() {
+        // ★修正点：引数でリストを受け取れるように変更
+        function renderList(listData) {
             const grid = document.getElementById('kanji-grid');
             grid.innerHTML = '';
             
             const badge = document.getElementById('mode-display');
             const counter = document.getElementById('star-counter');
-            let count = 0;
+            
+            // 全体のカウント計算（表示されているものだけでなく、全データに対する進捗）
+            let totalCleared = 0;
             const targetProgress = (currentMode === 'practice') ? progressPractice : progressTest;
+            
+            kanjiData.forEach(k => {
+                if (targetProgress[k.char]) totalCleared++;
+            });
 
             if (currentMode === 'practice') {
                 badge.textContent = "⭐ れんしゅうモード";
@@ -385,9 +431,17 @@
                 badge.style.backgroundColor = "#F44336";
             }
 
-            kanjiData.forEach(item => {
+            counter.innerText = totalCleared;
+
+            // 検索結果が0件の場合
+            if (listData.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#888;">みつかりません...</div>';
+                return;
+            }
+
+            // リスト描画
+            listData.forEach(item => {
                 const isCleared = targetProgress[item.char];
-                if (isCleared) count++;
 
                 const card = document.createElement('div');
                 card.className = `kanji-card`;
@@ -404,8 +458,6 @@
                 card.onclick = () => startApp(item);
                 grid.appendChild(card);
             });
-
-            counter.innerText = count;
         }
 
         // --- アプリ開始（練習orテスト） ---
@@ -459,7 +511,7 @@
                 highlightColor: '#FF7043',
                 showHintAfterMisses: 1,
                 
-                // ★修正点：ここをGitHub経由のURLに戻しました（一番最初に成功したやつです）
+                // GitHub経由の確実な日本データ
                 charDataLoader: (char, onComplete) => {
                     fetch(`https://cdn.jsdelivr.net/gh/chanind/hanzi-writer-data-jp@master/data/${char}.json`)
                         .then(res => {
@@ -555,7 +607,9 @@
                 localStorage.removeItem('kanjiMasterTest');
                 progressPractice = {};
                 progressTest = {};
-                renderList();
+                // リセット時は全データ再描画
+                document.getElementById('search-box').value = '';
+                renderList(kanjiData);
             }
         }
 
