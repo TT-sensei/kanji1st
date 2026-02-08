@@ -459,17 +459,15 @@
                 highlightColor: '#FF7043',
                 showHintAfterMisses: 1,
                 
-                // ★修正点：日本の書き順データ(hanzi-writer-data-jp)を正しく指定
-                // URLに /data/ を追加しました
+                // ★修正点：ここをGitHub経由のURLに戻しました（一番最初に成功したやつです）
                 charDataLoader: (char, onComplete) => {
-                    fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data-jp@0.5/data/${char}.json`)
+                    fetch(`https://cdn.jsdelivr.net/gh/chanind/hanzi-writer-data-jp@master/data/${char}.json`)
                         .then(res => {
                             if (!res.ok) throw new Error('JP Data not found');
                             return res.json();
                         })
                         .then(data => onComplete(data))
                         .catch(err => {
-                            // 日本語データがない場合は中国語版で代用
                             console.log("JP Data not found, fallback to default.");
                             fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${char}.json`)
                                 .then(res => res.json())
