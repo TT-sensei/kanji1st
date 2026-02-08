@@ -3,156 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1年生のかんじドリル</title>
+    <title>1ねんせい かんじコレクション</title>
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <style>
         body {
             font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+            background-color: #E0F7FA;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #E0F7FA; /* 子供向けに明るい水色 */
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
         }
 
         h1 {
             color: #006064;
-            font-size: 1.8rem;
-            margin-bottom: 10px;
+            margin: 15px 0;
+            font-size: 1.5rem;
             text-align: center;
         }
 
-        .progress {
-            font-size: 1.2rem;
-            color: #00838F;
-            margin-bottom: 15px;
-            font-weight: bold;
+        /* --- 画面切り替え用の設定 --- */
+        .screen {
+            display: none; /* 基本は非表示 */
+            width: 100%;
+            max-width: 600px;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
         }
 
-        /* メインの練習エリア */
-        .practice-area {
+        .screen.active {
+            display: flex; /* activeクラスがついた画面だけ表示 */
+        }
+
+        /* --- 一覧画面（リスト）のスタイル --- */
+        .kanji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 10px;
+            width: 90%;
+            padding: 10px;
+        }
+
+        .kanji-card {
+            background: white;
+            border-radius: 10px;
+            aspect-ratio: 1 / 1;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 2rem;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative; /* 星の位置合わせ用 */
+            border: 3px solid transparent;
+            transition: transform 0.1s;
+        }
+
+        .kanji-card:active {
+            transform: scale(0.95);
+        }
+
+        .kanji-card.completed {
+            border-color: #FFD700; /* クリアしたら枠が金になる */
+            background-color: #FFFDE7;
+        }
+
+        /* 星マーク */
+        .star-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 1.2rem;
+            display: none; /* 最初は隠す */
+        }
+
+        .kanji-card.completed .star-badge {
+            display: block; /* クリア済みなら表示 */
+        }
+
+        /* --- 練習画面のスタイル --- */
+        .practice-area {
             background: white;
             padding: 20px;
             border-radius: 20px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            margin-bottom: 20px;
+            margin: 20px 0;
             border: 5px solid #4DD0E1;
+            position: relative;
         }
 
-        /* 漢字を表示する領域 */
         #character-target-div {
             width: 300px;
             height: 300px;
             border: 2px dashed #B2EBF2;
-            border-radius: 10px;
-            cursor: pointer;
-            touch-action: none; 
             background-color: #FAFAFA;
         }
 
-        /* 読み仮名のスタイル */
-        .reading-box {
-            margin-left: 20px;
-            width: 60px;
-            text-align: center;
-            background-color: #FFF9C4; /* 薄い黄色 */
-            padding: 10px 5px;
-            border-radius: 10px;
-            border: 2px solid #FFF176;
-        }
-
-        .reading-text {
-            font-size: 2rem;
+        .reading-display {
+            font-size: 1.5rem;
+            color: #00838F;
+            margin-bottom: 10px;
             font-weight: bold;
-            color: #333;
-            writing-mode: vertical-rl;
-            text-orientation: upright;
-            letter-spacing: 0.2rem;
-            height: 100%;
         }
 
-        /* メッセージ表示 */
         #status-msg {
             height: 2rem;
             font-size: 1.2rem;
             font-weight: bold;
             color: #006064;
-            margin-bottom: 20px;
             text-align: center;
+            margin-bottom: 10px;
         }
 
-        /* 操作ボタン */
-        .controls {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
+        /* ボタン類 */
         button {
-            padding: 12px 24px;
-            font-size: 1.1rem;
+            padding: 10px 20px;
+            font-size: 1rem;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.1s, opacity 0.2s;
+            margin: 5px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
         }
 
-        button:active {
-            transform: translateY(2px);
-        }
-
-        /* 次へボタン */
-        button.primary {
-            background-color: #FF7043; /* オレンジ */
-            color: white;
-        }
-
-        /* 書き直すボタン */
-        button.secondary {
+        button.back-btn {
             background-color: #78909C;
             color: white;
+            align-self: flex-start;
+            margin-left: 20px;
         }
 
-        /* ヒントボタン */
-        button.hint {
-            background-color: #26A69A;
+        button.reset-btn {
+            background-color: #FF7043;
             color: white;
+        }
+
+        /* データ削除ボタン（小さく下に配置） */
+        .data-reset {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #aaa;
+            background: none;
+            border: 1px solid #ccc;
+            box-shadow: none;
         }
 
     </style>
 </head>
 <body>
 
-    <h1>1ねんせい かんじドリル</h1>
-    <div class="progress" id="progress-text">もんめ</div>
+    <h1>1ねんせい かんじコレクション</h1>
 
-    <div class="practice-area">
-        <div id="character-target-div"></div>
+    <div id="list-screen" class="screen active">
+        <div style="text-align: center; margin-bottom: 10px;">
+            あつめた星： <span id="star-count" style="font-size:1.5rem; color:#FF8F00; font-weight:bold;">0</span> / 80
+        </div>
+        <div class="kanji-grid" id="kanji-grid">
+            </div>
+
+        <button class="data-reset" onclick="clearData()">せーブデータをけす</button>
+    </div>
+
+    <div id="practice-screen" class="screen">
+        <button class="back-btn" onclick="goBack()">＜ もどる</button>
         
-        <div class="reading-box">
-            <div id="reading-text" class="reading-text"></div>
+        <div style="text-align: center; margin-top:10px;">
+            <div id="current-reading" class="reading-display"></div>
+        </div>
+
+        <div class="practice-area">
+            <div id="character-target-div"></div>
+        </div>
+
+        <div id="status-msg">なぞってみよう！</div>
+
+        <div>
+            <button class="reset-btn" onclick="retry()">かきなおす</button>
         </div>
     </div>
 
-    <div id="status-msg">なぞってみよう！</div>
-
-    <div class="controls">
-        <button class="secondary" onclick="resetWriter()">かきなおす</button>
-        <button class="hint" onclick="animateStroke()">ヒント</button>
-        <button class="primary" onclick="nextChar()">つぎへ</button>
-    </div>
-
     <script>
-        // 小学1年生の漢字リスト（80字）
-        const originalList = [
+        // 漢字データ（80文字）
+        const kanjiData = [
             { char: '一', reading: 'いち' }, { char: '右', reading: 'みぎ' },
             { char: '雨', reading: 'あめ' }, { char: '円', reading: 'えん' },
             { char: '王', reading: 'おう' }, { char: '音', reading: 'おと' },
@@ -195,108 +232,125 @@
             { char: '林', reading: 'はやし' }, { char: '六', reading: 'ろく' }
         ];
 
-        let kanjiList = []; // シャッフル後のリスト
-        let currentIndex = 0;
+        // セーブデータの読み込み（ブラウザに保存されたデータを取得）
+        let progressData = JSON.parse(localStorage.getItem('kanjiAppProgress')) || {};
+
         let writer;
+        let currentCharObj = null;
 
-        // 配列をシャッフルする関数
-        function shuffle(array) {
-            let newArray = [...array];
-            for (let i = newArray.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-            }
-            return newArray;
+        // 初期化：一覧画面を作る
+        function initList() {
+            const grid = document.getElementById('kanji-grid');
+            grid.innerHTML = ''; // クリア
+            let starCount = 0;
+
+            kanjiData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'kanji-card';
+                card.innerText = item.char;
+                
+                // 星マークの要素
+                const star = document.createElement('div');
+                star.className = 'star-badge';
+                star.innerText = '⭐';
+                card.appendChild(star);
+
+                // すでにクリア済みかチェック
+                if (progressData[item.char]) {
+                    card.classList.add('completed');
+                    starCount++;
+                }
+
+                // クリックしたら練習画面へ
+                card.onclick = () => startPractice(item);
+                grid.appendChild(card);
+            });
+
+            document.getElementById('star-count').innerText = starCount;
         }
 
-        // 初期化処理
-        function init() {
-            kanjiList = shuffle(originalList);
-            currentIndex = 0;
-            loadChar();
-        }
-
-        function loadChar() {
-            if (currentIndex >= kanjiList.length) {
-                // 全問終了時
-                document.getElementById('status-msg').textContent = "ぜんぶおわりました！すごい！";
-                document.getElementById('character-target-div').innerHTML = "💮";
-                document.getElementById('character-target-div').style.fontSize = "150px";
-                document.getElementById('character-target-div').style.display = "flex";
-                document.getElementById('character-target-div').style.alignItems = "center";
-                document.getElementById('character-target-div').style.justifyContent = "center";
-                return;
-            }
-
-            const targetChar = kanjiList[currentIndex];
+        // 練習画面を開始する
+        function startPractice(charObj) {
+            currentCharObj = charObj;
             
-            // UI更新
-            document.getElementById('reading-text').textContent = targetChar.reading;
-            document.getElementById('progress-text').textContent = `${currentIndex + 1} / ${kanjiList.length} もんめ`;
-            document.getElementById('status-msg').textContent = "なぞってみよう！";
+            // 画面切り替え
+            document.getElementById('list-screen').classList.remove('active');
+            document.getElementById('practice-screen').classList.add('active');
+
+            // UI設定
+            document.getElementById('current-reading').innerText = `${charObj.char} （${charObj.reading}）`;
+            document.getElementById('status-msg').innerText = "なぞってみよう！";
             document.getElementById('status-msg').style.color = "#006064";
 
-            // 以前の描画があれば削除
+            // 描画エリアの準備
             document.getElementById('character-target-div').innerHTML = '';
-            document.getElementById('character-target-div').style.display = "block"; // 終了画面からの復帰用
-
-            // HanziWriterの設定
-            writer = HanziWriter.create('character-target-div', targetChar.char, {
+            
+            writer = HanziWriter.create('character-target-div', charObj.char, {
                 width: 300,
                 height: 300,
                 padding: 10,
-                showOutline: true, // 下絵を表示
-                strokeAnimationSpeed: 1, 
-                delayBetweenStrokes: 200, // ストローク間の待ち時間
+                showOutline: true,
+                strokeAnimationSpeed: 1,
+                delayBetweenStrokes: 200,
                 radicalColor: '#168F16',
-                drawingWidth: 20, // 線の太さ
-                strokeColor: '#333', // 線の色
-                highlightColor: '#FF7043', // ヒントの色
-                outlineColor: '#DDD', // 下絵の色
+                drawingWidth: 20, 
+                highlightColor: '#FF7043',
             });
 
-            // クイズモードを開始
             startQuiz();
         }
 
         function startQuiz() {
             writer.quiz({
                 onMistake: function(strokeData) {
-                    document.getElementById('status-msg').textContent = "ちがうよ！かきじゅん は あってる？";
+                    document.getElementById('status-msg').innerText = "おしい！ここだよ！";
                     document.getElementById('status-msg').style.color = "#D32F2F";
-                    
-                    // 間違えたらその画だけヒントアニメーションを表示
                     writer.animateStroke(strokeData.strokeNum);
                 },
                 onCorrectStroke: function(strokeData) {
-                    document.getElementById('status-msg').textContent = "いい感じ！";
+                    document.getElementById('status-msg').innerText = "いいね！";
                     document.getElementById('status-msg').style.color = "#388E3C";
                 },
                 onComplete: function(summaryData) {
-                    document.getElementById('status-msg').textContent = "できた！せいかい！🎉";
-                    document.getElementById('status-msg').style.color = "#007bff";
+                    document.getElementById('status-msg').innerText = "やったー！せいかい！⭐";
+                    document.getElementById('status-msg').style.color = "#FF8F00";
                     
-                    // 正解したら自動で少し待ってから次へ行きたい場合は以下のコメントアウトを外す
-                    // setTimeout(nextChar, 1500); 
+                    // --- ここでセーブ ---
+                    saveProgress(currentCharObj.char);
                 }
             });
         }
 
-        function resetWriter() {
+        // データを保存する関数
+        function saveProgress(char) {
+            progressData[char] = true;
+            localStorage.setItem('kanjiAppProgress', JSON.stringify(progressData));
+            // 1秒後に一覧に戻る（オプション）
+            setTimeout(goBack, 1500); 
+        }
+
+        // 一覧に戻る
+        function goBack() {
+            document.getElementById('practice-screen').classList.remove('active');
+            document.getElementById('list-screen').classList.add('active');
+            initList(); // 一覧を再描画して星を反映
+        }
+
+        function retry() {
             startQuiz();
         }
 
-        function animateStroke() {
-            writer.animateStroke(0); // 最初の画からアニメーション
+        // データを全消去（デバッグ用・親御さん用）
+        function clearData() {
+            if(confirm('ほんとうに 星を ぜんぶ 消しますか？')) {
+                localStorage.removeItem('kanjiAppProgress');
+                progressData = {};
+                initList();
+            }
         }
 
-        function nextChar() {
-            currentIndex++;
-            loadChar();
-        }
-
-        // ページ読み込み時に開始
-        window.onload = init;
+        // 開始
+        window.onload = initList;
 
     </script>
 </body>
