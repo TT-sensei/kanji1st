@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&display=swap" rel="stylesheet">
 
     <style>
-        /* 全体の設定 */
+        /* --- 基本設定 --- */
         body {
             font-family: 'Mochiy Pop One', sans-serif;
             background-color: #FFF3E0;
@@ -23,7 +23,7 @@
             user-select: none;
         }
 
-        /* 画面切り替えの仕組み */
+        /* 画面切り替え */
         .screen {
             display: none;
             flex-direction: column;
@@ -71,21 +71,12 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
         }
 
-        .mode-btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn-practice {
-            background-color: #4CAF50; /* 緑 */
-            box-shadow: 0 6px 0px #2E7D32;
-        }
-        
-        .btn-test {
-            background-color: #F44336; /* 赤 */
-            box-shadow: 0 6px 0px #C62828;
-        }
+        .mode-btn:active { transform: scale(0.95); box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
+        .btn-practice { background-color: #4CAF50; }
+        .btn-test { background-color: #F44336; }
 
         /* --- 2. 一覧画面 --- */
         #list-screen {
@@ -139,45 +130,29 @@
             border: 2px solid transparent;
         }
 
-        .kanji-card:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0px #D7CCC8;
-        }
+        .kanji-card:active { transform: translateY(2px); box-shadow: 0 2px 0px #D7CCC8; }
 
-        /* クリアマーク（星・王冠） */
         .mark {
             position: absolute;
-            top: -10px;
-            right: -10px;
+            top: -10px; right: -10px;
             font-size: 1.5rem;
             text-shadow: 1px 1px 0 #FFF;
             display: none;
             z-index: 2;
         }
 
-        /* 練習クリア */
-        .kanji-card.cleared-practice {
-            background-color: #F1F8E9; /* 薄緑 */
-            border-color: #8BC34A;
-        }
+        /* クリア時のスタイル */
+        .kanji-card.cleared-practice { background-color: #F1F8E9; border-color: #8BC34A; }
         .kanji-card.cleared-practice .star-mark { display: block; }
-
-        /* テストクリア */
-        .kanji-card.cleared-test {
-            background-color: #FFEBEE; /* 薄赤 */
-            border-color: #EF5350;
-        }
+        .kanji-card.cleared-test { background-color: #FFEBEE; border-color: #EF5350; }
         .kanji-card.cleared-test .crown-mark { display: block; }
 
-        /* --- 3. 練習画面 --- */
+        /* --- 3. 練習/テスト画面 --- */
         #practice-screen {
-            background-color: #E0F7FA; /* 練習モード背景 */
+            background-color: #E0F7FA;
             position: relative;
         }
-        
-        #practice-screen.test-bg {
-            background-color: #FFEBEE; /* テストモード背景 */
-        }
+        #practice-screen.test-bg { background-color: #FFEBEE; }
 
         .practice-header {
             width: 100%;
@@ -198,8 +173,8 @@
             font-family: inherit;
             box-shadow: 0 3px 0 #455A64;
         }
+        .nav-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #455A64; }
 
-        /* 読み仮名の表示スタイル */
         .target-char-display {
             font-size: 2rem;
             color: #006064;
@@ -218,7 +193,7 @@
         #character-target-div {
             width: 300px;
             height: 300px;
-            touch-action: none;
+            touch-action: none; /* スマホでのスクロール防止 */
         }
 
         #message-area {
@@ -229,17 +204,15 @@
             font-weight: bold;
         }
 
-        /* アニメーション用 */
+        /* アニメーション */
         @keyframes pop {
             0% { transform: scale(0.5); opacity: 0; }
             50% { transform: scale(1.2); }
             100% { transform: scale(1); opacity: 1; }
         }
-
         .reward-animation {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             font-size: 10rem;
             animation: pop 0.5s ease-out;
@@ -252,48 +225,43 @@
         /* --- 結果メニュー（ポップアップ） --- */
         #result-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 200;
-            border-radius: 0;
         }
         
-        #result-overlay.active {
-            display: flex;
-        }
+        #result-overlay.active { display: flex; }
 
         .result-title {
             font-size: 2.5rem;
             margin-bottom: 30px;
-            color: #FF9800;
             text-shadow: 2px 2px 0 #FFF;
         }
 
         .result-btn {
-            width: 220px;
+            width: 240px;
             padding: 15px;
             margin: 10px 0;
             border: none;
             border-radius: 50px;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-family: inherit;
             color: white;
             cursor: pointer;
             box-shadow: 0 5px 0 rgba(0,0,0,0.2);
             transition: transform 0.1s;
+            font-weight: bold;
         }
-        .result-btn:active { transform: scale(0.95); }
+        .result-btn:active { transform: scale(0.95); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
 
-        .btn-next { background: #4CAF50; } /* 緑：次へ */
-        .btn-retry { background: #FF9800; } /* オレンジ：もう一度 */
-        .btn-home { background: #607D8B; }  /* グレー：ホーム */
+        .btn-next { background: #4CAF50; }  /* 次へ */
+        .btn-retry { background: #FF9800; } /* もう一度 */
+        .btn-home { background: #607D8B; }  /* ホーム */
 
     </style>
 </head>
@@ -351,7 +319,7 @@
     </div>
 
     <script>
-        // --- データ設定 ---
+        // --- データ設定（小学1年生80字） ---
         const kanjiData = [
             { char: '一', reading: 'いち' }, { char: '右', reading: 'みぎ' }, { char: '雨', reading: 'あめ' }, { char: '円', reading: 'えん' },
             { char: '王', reading: 'おう' }, { char: '音', reading: 'おと' }, { char: '下', reading: 'した' }, { char: '火', reading: 'ひ' },
@@ -476,6 +444,7 @@
 
             const isTest = (currentMode === 'test');
 
+            // --- HanziWriter 設定 ---
             writer = HanziWriter.create('character-target-div', item.char, {
                 width: 300,
                 height: 300,
@@ -490,16 +459,17 @@
                 highlightColor: '#FF7043',
                 showHintAfterMisses: 1,
                 
-                // 日本語データ読み込み設定（安全装置付き）
+                // ★日本の書き順データ(hanzi-writer-data-jp)を使用
                 charDataLoader: (char, onComplete) => {
-                    fetch(`https://cdn.jsdelivr.net/gh/chanind/hanzi-writer-data-jp@master/data/${char}.json`)
+                    fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data-jp@0.5/${char}.json`)
                         .then(res => {
-                            if (!res.ok) throw new Error('Not found');
+                            if (!res.ok) throw new Error('JP Data not found');
                             return res.json();
                         })
                         .then(data => onComplete(data))
                         .catch(err => {
-                            console.log("JP Data not found, falling back to default.");
+                            // 日本語データがない場合は中国語版で代用
+                            console.log("JP Data not found, fallback to default.");
                             fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${char}.json`)
                                 .then(res => res.json())
                                 .then(data => onComplete(data));
@@ -556,7 +526,7 @@
                 localStorage.setItem('kanjiMasterTest', JSON.stringify(progressTest));
             }
 
-            // ★以前はここで強制的に一覧へ戻していたが、メニューを表示するよう変更
+            // 少し待ってからメニューを表示
             setTimeout(() => {
                 document.getElementById('result-overlay').classList.add('active');
             }, 1000);
