@@ -172,6 +172,7 @@
         /* --- 3. 練習画面 --- */
         #practice-screen {
             background-color: #E0F7FA; /* 練習モード背景 */
+            position: relative;
         }
         
         #practice-screen.test-bg {
@@ -248,6 +249,52 @@
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
         }
 
+        /* --- 結果メニュー（ポップアップ） --- */
+        #result-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            border-radius: 0;
+        }
+        
+        #result-overlay.active {
+            display: flex;
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: #FF9800;
+            text-shadow: 2px 2px 0 #FFF;
+        }
+
+        .result-btn {
+            width: 220px;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-family: inherit;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .result-btn:active { transform: scale(0.95); }
+
+        .btn-next { background: #4CAF50; } /* 緑：次へ */
+        .btn-retry { background: #FF9800; } /* オレンジ：もう一度 */
+        .btn-home { background: #607D8B; }  /* グレー：ホーム */
+
     </style>
 </head>
 <body>
@@ -293,7 +340,14 @@
 
         <div id="message-area">なぞってみよう！</div>
 
-        <button class="nav-btn" onclick="retry()" style="background:#FF7043; margin-top:10px;">書き直す</button>
+        <div id="result-overlay">
+            <div class="result-title" id="result-title-text">できた！</div>
+            <button class="result-btn btn-next" onclick="goNext()">つぎの かんじ ▶</button>
+            <button class="result-btn btn-retry" onclick="retry()">もういちど ↺</button>
+            <button class="result-btn btn-home" onclick="showScreen('list-screen')">ホームにもどる 🏠</button>
+        </div>
+
+        <button class="nav-btn" onclick="retry()" style="background:#FF7043; margin-top:10px; z-index:10;">書き直す</button>
     </div>
 
     <script>
@@ -350,7 +404,6 @@
             const grid = document.getElementById('kanji-grid');
             grid.innerHTML = '';
             
-            // モードごとの表示切り替え
             const badge = document.getElementById('mode-display');
             const counter = document.getElementById('star-counter');
             let count = 0;
@@ -374,7 +427,6 @@
                     card.classList.add(currentMode === 'practice' ? 'cleared-practice' : 'cleared-test');
                 }
                 
-                // カードの表示は「常に漢字」でOK
                 card.innerHTML = `
                     ${item.char}
                     <div class="mark star-mark">⭐</div>
@@ -393,13 +445,15 @@
             currentChar = item;
             showScreen('practice-screen');
 
+            // ★メニューを隠す
+            document.getElementById('result-overlay').classList.remove('active');
+
             // 背景色とメッセージの切り替え
             const screen = document.getElementById('practice-screen');
             const msgArea = document.getElementById('message-area');
             const readingDisplay = document.getElementById('current-reading');
             
             if (currentMode === 'test') {
-                // テストモードなら読み仮名だけを大きく表示
                 screen.classList.add('test-bg');
                 msgArea.innerText = "この かんじ を かこう！";
                 msgArea.style.color = "#C62828";
@@ -407,7 +461,6 @@
                 readingDisplay.innerText = item.reading;
                 readingDisplay.style.fontSize = "3rem";
             } else {
-                // 練習モードなら漢字と読みを表示
                 screen.classList.remove('test-bg');
                 msgArea.innerText = "うすいせんを なぞろう！";
                 msgArea.style.color = "#006064";
@@ -421,7 +474,6 @@
             document.getElementById('anim-star').style.display = 'none';
             document.getElementById('anim-crown').style.display = 'none';
 
-            // HanziWriter 設定
             const isTest = (currentMode === 'test');
 
             writer = HanziWriter.create('character-target-div', item.char, {
@@ -438,9 +490,8 @@
                 highlightColor: '#FF7043',
                 showHintAfterMisses: 1,
                 
-                // 【修正版】日本語データ読み込み設定（安全装置付き）
+                // 日本語データ読み込み設定（安全装置付き）
                 charDataLoader: (char, onComplete) => {
-                    // まず日本式のデータをGitHub CDNから取得
                     fetch(`https://cdn.jsdelivr.net/gh/chanind/hanzi-writer-data-jp@master/data/${char}.json`)
                         .then(res => {
                             if (!res.ok) throw new Error('Not found');
@@ -448,7 +499,6 @@
                         })
                         .then(data => onComplete(data))
                         .catch(err => {
-                            // もし日本式データ取得に失敗したら、標準（中国式）データを使う
                             console.log("JP Data not found, falling back to default.");
                             fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${char}.json`)
                                 .then(res => res.json())
@@ -486,22 +536,44 @@
         // --- クリア処理 ---
         function handleComplete() {
             const msg = document.getElementById('message-area');
+            const resultTitle = document.getElementById('result-title-text');
             
             if (currentMode === 'practice') {
                 msg.innerText = "できたー！ ⭐ゲット！";
+                resultTitle.innerText = "できたー！⭐";
+                resultTitle.style.color = "#4CAF50";
                 document.getElementById('anim-star').style.display = 'block';
+                
                 progressPractice[currentChar.char] = true;
                 localStorage.setItem('kanjiMasterPractice', JSON.stringify(progressPractice));
             } else {
                 msg.innerText = "すごい！！ 👑ゲット！";
+                resultTitle.innerText = "すごい！👑";
+                resultTitle.style.color = "#F44336";
                 document.getElementById('anim-crown').style.display = 'block';
+                
                 progressTest[currentChar.char] = true;
                 localStorage.setItem('kanjiMasterTest', JSON.stringify(progressTest));
             }
 
+            // ★以前はここで強制的に一覧へ戻していたが、メニューを表示するよう変更
             setTimeout(() => {
+                document.getElementById('result-overlay').classList.add('active');
+            }, 1000);
+        }
+
+        // --- 次の漢字へ進む機能 ---
+        function goNext() {
+            // 今の漢字がリストのどこにあるか探す
+            const currentIndex = kanjiData.findIndex(k => k.char === currentChar.char);
+            
+            // 次の漢字があれば進む
+            if (currentIndex >= 0 && currentIndex < kanjiData.length - 1) {
+                startApp(kanjiData[currentIndex + 1]);
+            } else {
+                alert("これでおしまい！ すごい！");
                 showScreen('list-screen');
-            }, 1500);
+            }
         }
 
         function retry() {
